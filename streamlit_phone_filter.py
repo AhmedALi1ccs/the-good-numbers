@@ -36,14 +36,21 @@ def filter_phone_data(input_file, output_file=None, reorder_phones=True):
         st.error(f"Error reading CSV file: {e}")
         return None
 
-    # Identify phone-related columns
     phone_cols, tag_cols, type_cols, status_cols = [], [], [], []
+    # Create a mapping of lowercase column names to actual column names
+    col_mapping = {col.lower(): col for col in df.columns}
+
     for i in range(1, 31):
-        if f'Phone {i}' in df.columns:
-            phone_cols.append(f'Phone {i}')
-            tag_cols.append(f'Phone Tags {i}')
-            type_cols.append(f'Phone Type {i}')
-            status_cols.append(f'Phone Status {i}')
+        phone_key = f'phone {i}'
+        tag_key = f'phone tags {i}'
+        type_key = f'phone type {i}'
+        status_key = f'phone status {i}'
+        
+        if phone_key in col_mapping:
+            phone_cols.append(col_mapping[phone_key])
+            tag_cols.append(col_mapping.get(tag_key, f'Phone Tags {i}'))  # fallback to original format
+            type_cols.append(col_mapping.get(type_key, f'Phone Type {i}'))
+            status_cols.append(col_mapping.get(status_key, f'Phone Status {i}'))
 
     st.info(f"Found {len(phone_cols)} phone columns")
     
@@ -210,7 +217,7 @@ def main():
                         st.metric("Total Columns", len(filtered_df.columns))
                     
                     with col3:
-                        phone_cols = [col for col in filtered_df.columns if col.startswith('Phone ') and not any(x in col for x in ['Tags', 'Type', 'Status'])]
+                        phone_cols = [col for col in filtered_df.columns if col.lower().startswith('phone ') and not any(x.lower() in col.lower() for x in ['tags', 'type', 'status'])]
                         st.metric("Phone Columns", len(phone_cols))
                     
                     # Show preview of processed data
